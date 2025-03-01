@@ -28,10 +28,10 @@ pipeline {
         stage('SonarQube Analysis') {
             steps {
                 script {
-                    withSonarQubeEnv('sonar-scanner') {
-                    sh ''' $SCANNER_HOME/bin/sonar-scanner -Dsonar.projectName=DevSecOps-NetflixProject \
+                    withSonarQubeEnv('SonarQube') {
+                        sh ''' $SCANNER_HOME/bin/sonar-scanner -Dsonar.projectName=DevSecOps-NetflixProject \
                     -Dsonar.projectKey=DevSecOps-NetflixProject '''
-                }
+                    }
                 }
             }
         }
@@ -39,7 +39,7 @@ pipeline {
         stage('quality gate') {
             steps {
                 script {
-                    waitForQualityGate abortPipeline: false, credentialsId: 'sonar-token' 
+                    waitForQualityGate abortPipeline: false, credentialsId: 'Sonar Token' 
                 }
             }
         }
