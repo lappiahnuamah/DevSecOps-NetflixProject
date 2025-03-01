@@ -68,7 +68,7 @@ pipeline {
         stage("Docker Build & Push"){
             steps{
                 script{
-                   withDockerRegistry(credentialsId: 'dockerhub-token', toolName: 'docker'){   
+                   withDockerRegistry(credentialsId: 'dockerhub-token'){   
                        sh "docker build --build-arg TMDB_V3_API_KEY=26df1f47263a985c0513b5e8e08a23a7 -t netflix ."
                        sh "docker tag netflix $IMAGE_NAME"
                        sh "docker push $IMAGE_NAME"
