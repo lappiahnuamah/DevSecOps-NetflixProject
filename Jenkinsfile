@@ -8,7 +8,7 @@ pipeline {
     environment {
         SONAR_TOKEN = credentials('sonar-token') // Replace with your SonarQube token ID in Jenkins
         // DOCKERHUB_CREDENTIALS = credentials('dockerhub-id') // Replace with your DockerHub credentials ID
-        IMAGE_NAME = "lappiahnuamah/DevSecOps-NetflixProject"
+        IMAGE_NAME = "lappiahnuamah/devsecops-netflixproject"
         SCANNER_HOME = tool 'sonar-scanner'
         NVD_API_KEY = credentials('nvd-api-key')
         REGISTRY = "docker.io"
@@ -71,8 +71,8 @@ pipeline {
                 script{
                    withDockerRegistry([credentialsId: 'docker-hub-credentials', url: 'https://index.docker.io/v1/']){
                        sh "docker build --build-arg TMDB_V3_API_KEY=26df1f47263a985c0513b5e8e08a23a7 -t netflix ."
-                       sh "docker tag netflix $IMAGE_NAME"
-                       sh "docker push $IMAGE_NAME"
+                       sh "docker tag netflix $REGISTRY/$IMAGE_NAME"
+                       sh "docker push $REGISTRY/$IMAGE_NAME"
                     }
                 }
             }
@@ -82,7 +82,7 @@ pipeline {
                 sh "trivy image $IMAGE_NAME > trivyimage.txt" 
             }
         }
-        
+
         stage('Deploy to container'){
             steps{
                 sh 'docker run -d --name netflix -p 8081:80 $IMAGE_NAME'
