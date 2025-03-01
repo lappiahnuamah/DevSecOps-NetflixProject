@@ -10,6 +10,7 @@ pipeline {
         DOCKERHUB_CREDENTIALS = credentials('dockerhub-token') // Replace with your DockerHub credentials ID
         IMAGE_NAME = "lappiahnuamah/DevSecOps-NetflixProject"
         SCANNER_HOME = tool 'sonar-scanner'
+        NVD_API_KEY = credentials('nvd-api-key')
     }
 
     stages {
@@ -50,12 +51,14 @@ pipeline {
             }
         }
 
-        stage('OWASP FS SCAN') {
+
+       stage('OWASP FS SCAN') {
             steps {
-                dependencyCheck additionalArguments: '--scan ./ --disableYarnAudit --disableNodeAudit', odcInstallation: 'DP-Check'
-                dependencyCheckPublisher pattern: '**/dependency-check-report.xml'
+                dependencyCheck additionalArguments: '--nvdApiKey $NVD_API_KEY --scan ./ --disableYarnAudit --disableNodeAudit',
+                odcInstallation: 'DP-Check'
             }
         }
+
 
        stage('TRIVY FS SCAN') {
             steps {
