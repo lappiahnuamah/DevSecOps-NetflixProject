@@ -7,10 +7,11 @@ pipeline {
     }
     environment {
         SONAR_TOKEN = credentials('sonar-token') // Replace with your SonarQube token ID in Jenkins
-        DOCKERHUB_CREDENTIALS = credentials('dockerhub-token') // Replace with your DockerHub credentials ID
+        // DOCKERHUB_CREDENTIALS = credentials('dockerhub-id') // Replace with your DockerHub credentials ID
         IMAGE_NAME = "lappiahnuamah/DevSecOps-NetflixProject"
         SCANNER_HOME = tool 'sonar-scanner'
         NVD_API_KEY = credentials('nvd-api-key')
+        REGISTRY = "docker.io"
     }
 
     stages {
@@ -68,7 +69,7 @@ pipeline {
         stage("Docker Build & Push"){
             steps{
                 script{
-                   withDockerRegistry(credentialsId: 'dockerhub-token'){   
+                   withDockerRegistry([credentialsId: 'docker-hub-credentials', url: 'https://index.docker.io/v1/']){
                        sh "docker build --build-arg TMDB_V3_API_KEY=26df1f47263a985c0513b5e8e08a23a7 -t netflix ."
                        sh "docker tag netflix $IMAGE_NAME"
                        sh "docker push $IMAGE_NAME"
