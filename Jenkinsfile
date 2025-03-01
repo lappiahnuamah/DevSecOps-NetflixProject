@@ -1,42 +1,104 @@
 pipeline {
     agent any
+
     tools {
         jdk 'jdk17'
         nodejs 'node16'
     }
     environment {
+        SONAR_TOKEN = credentials('sonar-token') // Replace with your SonarQube token ID in Jenkins
+        DOCKERHUB_CREDENTIALS = credentials('dockerhub-token') // Replace with your DockerHub credentials ID
+        IMAGE_NAME = "lappiahnuamah/DevSecOps-NetflixProject"
         SCANNER_HOME = tool 'sonar-scanner'
     }
+
     stages {
         stage('clean workspace') {
             steps {
                 cleanWs()
             }
         }
-        stage('Checkout from Git') {
+
+        stage('Checkout Code') {
             steps {
-                git branch: 'main', url: 'https://github.com/N4si/DevSecOps-Project.git'
+                git branch: 'main', url: 'https://github.com/lappiahnuamah/DevSecOps-NetflixProject'
             }
         }
-        stage("Sonarqube Analysis") {
+
+        stage('Install Tools') {
             steps {
-                withSonarQubeEnv('sonar-server') {
-                    sh '''$SCANNER_HOME/bin/sonar-scanner -Dsonar.projectName=Netflix \
-                    -Dsonar.projectKey=Netflix'''
-                }
+                sh 'sudo apt update && sudo apt install -y docker.io'
+                sh 'docker --version'
             }
         }
-        stage("quality gate") {
+
+        stage('SonarQube Analysis') {
             steps {
                 script {
-                    waitForQualityGate abortPipeline: false, credentialsId: 'Sonar-token'
+                    withSonarQubeEnv('SonarQube') { // Replace with your SonarQube server name in Jenkins
+                        sh 'mvn sonar:sonar -Dsonar.login=$SONAR_TOKEN'
+                    }
                 }
             }
         }
+
+        stage('quality gate') {
+            steps {
+                script {
+                    timeout(time: 5, unit: 'MINUTES') {
+                        waitForQualityGate abortPipeline: true
+                    }
+                }
+            }
+        }
+
         stage('Install Dependencies') {
             steps {
                 sh "npm install"
             }
+        }
+
+        stage('OWASP FS SCAN') {
+            steps {
+                dependencyCheck additionalArguments: '--scan ./ --disableYarnAudit --disableNodeAudit', odcInstallation: 'DP-Check'
+                dependencyCheckPublisher pattern: '**/dependency-check-report.xml'
+            }
+        }
+
+       stage('TRIVY FS SCAN') {
+            steps {
+                sh "trivy fs . > trivyfs.txt"
+            }
+        }
+        stage("Docker Build & Push"){
+            steps{
+                script{
+                   withDockerRegistry(credentialsId: 'docker', toolName: 'docker'){   
+                       sh "docker build --build-arg TMDB_V3_API_KEY=26df1f47263a985c0513b5e8e08a23a7 -t netflix ."
+                       sh "docker tag netflix $IMAGE_NAME"
+                       sh "docker push $IMAGE_NAME"
+                    }
+                }
+            }
+        }
+        stage("TRIVY"){
+            steps{
+                sh "trivy image $IMAGE_NAME > trivyimage.txt" 
+            }
+        }
+        stage('Deploy to container'){
+            steps{
+                sh 'docker run -d --name netflix -p 8081:80 $IMAGE_NAME'
+            }
+        }
+    }
+
+    post {
+        success {
+            echo 'Pipeline executed successfully!'
+        }
+        failure {
+            echo 'Pipeline failed!'
         }
     }
 }
