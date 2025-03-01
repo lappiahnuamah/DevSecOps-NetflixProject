@@ -2,8 +2,8 @@ pipeline {
     agent any
 
     tools {
-        jdk 'jdk17'
-        nodejs 'node16'
+        jdk 'java-17'
+        nodejs 'recent node'
     }
     environment {
         SONAR_TOKEN = credentials('sonar-token') // Replace with your SonarQube token ID in Jenkins
@@ -35,9 +35,10 @@ pipeline {
         stage('SonarQube Analysis') {
             steps {
                 script {
-                    withSonarQubeEnv('SonarQube') { // Replace with your SonarQube server name in Jenkins
-                        sh 'mvn sonar:sonar -Dsonar.login=$SONAR_TOKEN'
-                    }
+                    withSonarQubeEnv('sonar-server') {
+                    sh ''' $SCANNER_HOME/bin/sonar-scanner -Dsonar.projectName=DevSecOps-NetflixProject \
+                    -Dsonar.projectKey=DevSecOps-NetflixProject '''
+                }
                 }
             }
         }
