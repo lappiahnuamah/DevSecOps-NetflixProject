@@ -85,7 +85,7 @@ pipeline {
 
         stage('Deploy to container'){
             steps{
-                sh 'docker run -d --name netflix -p 8081:80 $IMAGE_NAME'
+                sh 'docker run -d --name netflix -p 8081:80 $REGISTRY/$IMAGE_NAME'
             }
         }
     }
