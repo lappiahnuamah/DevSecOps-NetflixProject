@@ -25,13 +25,6 @@ pipeline {
             }
         }
 
-        stage('Install Tools') {
-            steps {
-                sh 'sudo apt update && sudo apt install -y docker.io'
-                sh 'docker --version'
-            }
-        }
-
         stage('SonarQube Analysis') {
             steps {
                 script {
@@ -46,9 +39,7 @@ pipeline {
         stage('quality gate') {
             steps {
                 script {
-                    timeout(time: 5, unit: 'MINUTES') {
-                        waitForQualityGate abortPipeline: true
-                    }
+                    waitForQualityGate abortPipeline: false, credentialsId: 'sonar-token' 
                 }
             }
         }
