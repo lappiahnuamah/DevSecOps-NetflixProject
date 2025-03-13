@@ -14,6 +14,7 @@ pipeline {
         REGISTRY = "docker.io"
     }
 
+
     stages {
         stage('clean workspace') {
             steps {
